@@ -1,0 +1,37 @@
+plugins {
+    id "io.saagie.gradle-saagie-dataops-plugin" version "1.1.13"
+    id 'net.saliman.properties' version '1.5.1'
+}
+
+task packageCode(type: Zip) {
+    archiveFileName = "${rootProject.name}.zip"
+    destinationDirectory = file("dist")
+    from "../project"
+}
+
+saagie {
+    server {
+        url = 'https://saagie-beta.prod.saagie.io/'
+        login = System.getenv('SAAGIE_LOGIN')
+        password = System.getenv('SAAGIE_PWD')
+        environment = saagieEnvironment
+    }
+    project {
+        id = saagieProject
+    }
+    job {
+        id = saagieJob
+
+    }
+    jobVersion {
+        commandLine = "python {file} test cicd"
+        runtimeVersion = "3.6"
+        packageInfo {
+            name = "dist/${rootProject.name}.zip"
+        }
+    }
+}
+
+projectsCreateJob.dependsOn(packageCode)
+projectsUpdateJob.dependsOn(packageCode)
+projectsRunJob.dependsOn(projectsUpdateJob)

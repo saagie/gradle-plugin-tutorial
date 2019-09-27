@@ -1,0 +1,37 @@
+plugins {
+  id 'io.saagie.gradle-saagie-plugin' version '2.2.1'
+  id 'net.saliman.properties' version '1.5.1'
+}
+
+task packageCode(type: Zip) {
+    archiveFileName = "${rootProject.name}.zip"
+    destinationDirectory = file("dist")
+    from "../project"
+}
+
+println saagieEnvironment
+saagie {
+    server {
+        url = "https://saagie-beta.prod.saagie.io/api/v1"
+        login = System.getenv('SAAGIE_LOGIN')
+        password = System.getenv('SAAGIE_PWD')
+        platform = saagieEnvironment
+    }
+    jobs {[
+        {
+            id = saagieJob.toInteger()
+            type = "python"
+            category = "processing"
+            languageVersion = "3.5.2"
+            cpu = 1
+            memory = 512
+            disk = 512
+            arguments = "python {file} test cicd"
+        }
+
+    ]}
+    fileName = "dist/${rootProject.name}.zip"
+}
+
+updateJob.dependsOn(packageCode)
+runJob.dependsOn(updateJob)
